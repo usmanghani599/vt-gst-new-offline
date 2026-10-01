@@ -1,0 +1,65 @@
+appId: com.vivertech.vtgst.desktop
+productName: VTGST Desktop
+copyright: Copyright © Viver Technologies
+
+directories:
+  output: release
+  buildResources: electron-static
+
+# Only the compiled main/preload code goes into app.asar. The Next.js server
+# (with its own node_modules) ships as an extra resource and is verified
+# against the integrity manifest hash compiled into the main process.
+files:
+  - dist-electron/**/*
+  - electron-static/**/*
+  - package.json
+  - "!**/node_modules/**/*"
+extraResources:
+  - from: build/server
+    to: server
+    filter:
+      - "**/*"
+
+asar: true
+npmRebuild: false
+nodeGypRebuild: false
+buildDependenciesFromSource: false
+
+# Electron fuses: block the common ways of tampering with / debugging the app.
+electronFuses:
+  runAsNode: false
+  enableCookieEncryption: true
+  enableNodeOptionsEnvironmentVariable: false
+  enableNodeCliInspectArguments: false
+  enableEmbeddedAsarIntegrityValidation: true
+  onlyLoadAppFromAsar: true
+  grantFileProtocolExtraPrivileges: false
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: electron-static/icon.png
+  # Code signing: set CSC_LINK (path/URL to .pfx) and CSC_KEY_PASSWORD in the build environment.
+  signtoolOptions:
+    publisherName: Viver Technologies
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: VTGST Desktop
+  deleteAppDataOnUninstall: false
+
+mac:
+  target: dmg
+  category: public.app-category.business
+  icon: electron-static/icon.png
+  hardenedRuntime: true
+
+linux:
+  target: AppImage
+  icon: electron-static/icon.png
+  category: Office
