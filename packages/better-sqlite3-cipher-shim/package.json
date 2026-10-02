@@ -1,0 +1,10 @@
+{
+  "name": "better-sqlite3",
+  "version": "12.99.0-vtgst-cipher",
+  "description": "VTGST: better-sqlite3 API backed by SQLCipher-encrypted better-sqlite3-multiple-ciphers",
+  "main": "index.js",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "better-sqlite3-multiple-ciphers": "^13.0.3"
+  }
+}
