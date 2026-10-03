@@ -7,6 +7,10 @@
  *   VTGST_GOOGLE_CLIENT_SECRET  Google OAuth desktop client secret
  *   VTGST_LICENSE_PUBLIC_KEY    Ed25519 public key PEM (or base64 of it) from scripts/generate-desktop-keys.ts
  *
+ * Instead of environment variables you can put the values in `build.env` (see
+ * build.env.example) and the public key in `license-public.pem`, both in the
+ * project root and never committed. Real environment variables win.
+ *
  * `--release` refuses to continue when production values are missing.
  */
 import fs from 'fs';
@@ -15,9 +19,21 @@ import { fileURLToPath } from 'url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const release = process.argv.includes('--release');
-const env = process.env;
+
+// Optional build.env file: KEY=value lines, # comments, optional quotes.
+const fileEnv = {};
+const envFile = path.join(ROOT, 'build.env');
+if (fs.existsSync(envFile)) {
+  for (const line of fs.readFileSync(envFile, 'utf8').split(/\r?\n/)) {
+    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/);
+    if (m && !line.trim().startsWith('#')) fileEnv[m[1]] = m[2].replace(/^(['"])(.*)\1$/, '$2');
+  }
+}
+const env = { ...fileEnv, ...Object.fromEntries(Object.entries(process.env).filter(([, v]) => v)) };
 
 let pub = (env.VTGST_LICENSE_PUBLIC_KEY || '').trim();
+const pemFile = path.resolve(ROOT, env.VTGST_LICENSE_PUBLIC_KEY_FILE || 'license-public.pem');
+if (!pub && fs.existsSync(pemFile)) pub = fs.readFileSync(pemFile, 'utf8').trim();
 if (pub && !pub.includes('BEGIN')) pub = Buffer.from(pub, 'base64').toString('utf8');
 
 const manifestHashFile = path.join(ROOT, 'build', 'server-manifest.sha256');
@@ -38,6 +54,7 @@ if (release) {
   if (!serverManifestHash) missing.push('build/server-manifest.sha256 (run npm run bundle first)');
   if (missing.length) {
     console.error(`Release build is missing: ${missing.join(', ')}`);
+    console.error('Set them in build.env + license-public.pem in the project root (see build.env.example), or as environment variables.');
     process.exit(1);
   }
   if (!cfg.googleClientId) console.warn('! VTGST_GOOGLE_CLIENT_ID not set: Google Drive backup will be disabled in this build.');

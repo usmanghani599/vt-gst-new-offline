@@ -25,7 +25,8 @@ app/, components/, lib/, public/   Same Next.js UI as the online app (synced fro
   lib/db.ts, lib/auth.ts, lib/s3.ts  Desktop replacements (encrypted SQLite, license-based features, encrypted local files)
   middleware.ts                    Per-launch secret, license lock, online-only route redirects
 electron/                          Main process: vault, fingerprint, license, server host, backup, print, IPC
-electron-static/                   Activation screen + icon
+electron-static/                   Activation screen + icon (packed into app.asar)
+installer/                         Installer/app icon used by electron-builder
 desktop-server/server-entry.js     Embedded server entry: migrations, Next.js start, backup export/restore
 packages/better-sqlite3-cipher-shim  Makes Prisma open the DB encrypted
 prisma/upstream.schema.prisma      Copied from online (MySQL)
@@ -52,7 +53,7 @@ VTGST_SERVER_URL=https://your-online-domain VTGST_LICENSE_PUBLIC_KEY="$(cat publ
 
 ## Build installers
 
-Set these in the build environment (CI secrets), then build **on the target OS**:
+Easiest: copy `build.env.example` to `build.env` and fill it in, and save the license public key as `license-public.pem` (both in the project root; both are git-ignored). Or set the same names as environment variables (CI secrets). Then build **on the target OS**:
 
 | Variable | Purpose |
 |---|---|
