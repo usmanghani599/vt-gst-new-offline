@@ -33,5 +33,6 @@ exports.default = async function afterPack(context) {
     else if (crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex') !== hash) bad.push(`changed ${rel}`);
   }
   if (bad.length) throw new Error(`Packaged server failed integrity check (${bad.length}):\n${bad.slice(0, 20).join('\n')}`);
-  console.log(`  • afterPack: server copied and verified (${Object.keys(manifest.files).length} files) -> ${dest}`);
+  const buildId = (fs.readFileSync(path.join(__dirname, '..', 'electron', 'build-config.ts'), 'utf8').match(/"buildId": "([^"]+)"/) || [])[1] || '?';
+  console.log(`  • afterPack: build ${buildId}: server copied and verified (${Object.keys(manifest.files).length} files) -> ${dest}`);
 };

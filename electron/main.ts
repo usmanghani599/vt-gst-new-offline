@@ -196,6 +196,11 @@ function buildMenu() {
         { type: 'separator' },
         { label: 'Back up to file now…', click: () => backup.backupNow('file', mainWindow) },
         { type: 'separator' },
+        {
+          label: 'About VTGST Desktop',
+          click: () =>
+            dialog.showMessageBox({ title: 'About', message: `VTGST Desktop ${app.getVersion()}`, detail: `Build ${BUILD_CONFIG.buildId}` }),
+        },
         { role: 'quit' },
       ],
     },
@@ -276,7 +281,11 @@ async function boot() {
     const integrity = verifyServerIntegrity(serverDir());
     if (!integrity.ok) {
       recordEvent('INTEGRITY_FAILED', { reason: integrity.reason });
-      return fatal('VTGST Desktop', `This installation is damaged or was modified (${integrity.reason}). Please reinstall VTGST Desktop.`);
+      return fatal(
+        'VTGST Desktop',
+        `This installation is damaged or was modified (${integrity.reason}). Please reinstall VTGST Desktop.\n\n` +
+          `Build ${BUILD_CONFIG.buildId}\nFolder: ${serverDir()}`
+      );
     }
   }
   checkClock();
