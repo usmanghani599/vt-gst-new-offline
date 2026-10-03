@@ -83,6 +83,7 @@ export interface VtgstDesktopBridge {
     checkNow(): R<LicenseInfo>;
     deactivate(): R<{ ok: boolean; error?: string }>;
     openActivation(): R<void>;
+    change(): R<{ ok: boolean; error?: string }>;
   };
   sync: {
     status(): R<SyncStatusInfo>;

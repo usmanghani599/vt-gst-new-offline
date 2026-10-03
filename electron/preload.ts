@@ -26,6 +26,7 @@ contextBridge.exposeInMainWorld('vtgstDesktop', {
     checkNow: () => call('license:check'),
     deactivate: () => call('license:deactivate'),
     openActivation: () => call('license:open-activation'),
+    change: () => call('license:change'),
   },
   sync: {
     status: () => call('sync:status'),

@@ -132,6 +132,24 @@ function LicenseTab() {
     if (!r.ok) setMsg({ tone: 'error', text: r.error || 'Could not deactivate' });
   }
 
+  async function changeKey() {
+    if (
+      !confirm(
+        'Change to another license key?\n\n' +
+          '• This computer is released from the current license (internet needed).\n' +
+          '• Your business data stays on this computer.\n' +
+          '• If the new key belongs to a different license, set your backup password again afterwards; ' +
+          'older backups still open with their old password on the old license.'
+      )
+    )
+      return;
+    setBusy('change');
+    setMsg(null);
+    const r = await desktop()!.license.change();
+    setBusy(null);
+    if (!r.ok) setMsg({ tone: 'error', text: r.error || 'Could not change the license key' });
+  }
+
   const good = info?.state === 'VALID' || info?.state === 'CHECK_DUE';
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -161,9 +179,12 @@ function LicenseTab() {
             <Row label="Google Drive backup" value={info.allowBackup ? 'Included' : 'Not included'} />
           </div>
         )}
-        <div className="flex gap-2 pt-1">
+        <div className="flex flex-wrap gap-2 pt-1">
           <Button busy={busy === 'check'} onClick={check}>
             <RefreshCcw className="h-4 w-4" /> Verify now
+          </Button>
+          <Button tone="secondary" busy={busy === 'change'} onClick={changeKey}>
+            <KeyRound className="h-4 w-4" /> Change license key
           </Button>
           <Button tone="danger" busy={busy === 'deactivate'} onClick={deactivate}>
             Deactivate this computer
