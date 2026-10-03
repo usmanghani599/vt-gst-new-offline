@@ -400,7 +400,12 @@ async function syncCall(body: Record<string, unknown>) {
 
 function registerIpc() {
   handle('app:info', () => ({ version: app.getVersion(), platform: process.platform, dataDir: dataPaths().dataDir, online: net.isOnline() }));
-  handle('app:quit', () => app.quit());
+  // From the activation window: while the app is already running (changing the
+  // license), just close that window; during first start, quit.
+  handle('app:quit', () => {
+    if (serverRunning && activationWindow) activationWindow.close();
+    else app.quit();
+  });
 
   handle('activation:activate', async (_e, licenseKey: string, email: string) => {
     try {
@@ -436,6 +441,17 @@ function registerIpc() {
   });
   handle('license:open-activation', () => {
     openActivationWindow();
+  });
+  // Change to another license key: free this computer's seat on the old
+  // license (needs internet, as does activating the new one), then activate.
+  handle('license:change', async () => {
+    try {
+      await deactivate();
+    } catch (e: any) {
+      return { ok: false, error: e.code === 'OFFLINE' ? 'Connect to the internet to change the license key.' : e.message };
+    }
+    openActivationWindow();
+    return { ok: true };
   });
 
   handle('print:current', async (e, opts: { kind: PrintKind }) => printContents(e.sender, opts?.kind === 'receipt' ? 'receipt' : 'document'));
