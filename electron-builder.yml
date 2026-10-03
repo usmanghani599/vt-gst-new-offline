@@ -7,7 +7,7 @@ directories:
   buildResources: installer
 
 # Only the compiled main/preload code goes into app.asar. The whole local
-# Next.js server ships as ONE file, resources/server.asar (built by
+# Next.js server ships as ONE file, resources/server.pack (built by
 # scripts/prepare-bundle.mjs). The app unpacks it on first start and verifies
 # every file against the manifest hash compiled into the main process.
 files:
@@ -16,8 +16,8 @@ files:
   - package.json
   - "!**/node_modules/**/*"
 extraResources:
-  - from: build/server.asar
-    to: server.asar
+  - from: build/server.pack
+    to: server.pack
 afterPack: scripts/after-pack.cjs
 
 asar: true

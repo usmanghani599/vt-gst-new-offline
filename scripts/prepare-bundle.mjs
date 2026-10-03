@@ -4,7 +4,7 @@
  * Electron app (resources/server):
  *   .next/standalone + static assets + public + migrations + server-entry.js
  * writes the integrity manifest whose hash is compiled into the main process,
- * and packs everything into build/server.asar (the single file that ships).
+ * and packs everything into build/server.pack (the single file that ships).
  *
  *   node scripts/prepare-bundle.mjs
  */
@@ -93,11 +93,11 @@ fs.writeFileSync(path.join(ROOT, 'build', 'server-manifest.sha256'), crypto.crea
 // file (no node_modules/dot-folder filtering issues, much faster install); the
 // app unpacks it on first start and verifies every file against the manifest.
 const { createPackage } = require('@electron/asar');
-const PACK = path.join(ROOT, 'build', 'server.asar');
+const PACK = path.join(ROOT, 'build', 'server.pack');
 fs.rmSync(PACK, { force: true });
 await createPackage(OUT, PACK);
 // The archive hash is taken by write-build-config.mjs (a later step): createPackage
 // can resolve before the file is completely flushed to disk.
 fs.rmSync(path.join(ROOT, 'build', 'server-pack.sha256'), { force: true });
 
-console.log(`build/server ready: ${Object.keys(files).length} files in integrity manifest; packed into build/server.asar (${(fs.statSync(PACK).size / 1048576).toFixed(0)} MB).`);
+console.log(`build/server ready: ${Object.keys(files).length} files in integrity manifest; packed into build/server.pack (${(fs.statSync(PACK).size / 1048576).toFixed(0)} MB).`);

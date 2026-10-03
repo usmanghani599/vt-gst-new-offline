@@ -62,5 +62,13 @@
     "better-sqlite3": "$better-sqlite3",
     "postcss": "^8.5.28",
     "sharp": "^0.35.4"
+  },
+  "allowScripts": {
+    "prisma@6.19.3": true,
+    "@prisma/client@6.19.3": true,
+    "@prisma/engines@6.19.3": true,
+    "esbuild@0.28.2": true,
+    "electron-winstaller@5.4.0": true,
+    "better-sqlite3-multiple-ciphers": false
   }
 }

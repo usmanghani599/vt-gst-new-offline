@@ -20,25 +20,42 @@ import { fileURLToPath } from 'url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const release = process.argv.includes('--release');
 
-// Optional build.env file: KEY=value lines, # comments, optional quotes.
+// Optional .env / build.env files: KEY=value lines, # comments, optional quotes.
+// Precedence: real environment variables > build.env > .env
 const fileEnv = {};
-const envFile = path.join(ROOT, 'build.env');
-if (fs.existsSync(envFile)) {
+for (const name of ['.env', 'build.env']) {
+  const envFile = path.join(ROOT, name);
+  if (!fs.existsSync(envFile)) continue;
   for (const line of fs.readFileSync(envFile, 'utf8').split(/\r?\n/)) {
     const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/);
-    if (m && !line.trim().startsWith('#')) fileEnv[m[1]] = m[2].replace(/^(['"])(.*)\1$/, '$2');
+    if (m && !line.trim().startsWith('#') && m[2] !== '') fileEnv[m[1]] = m[2].replace(/^(['"])(.*)\1$/, '$2');
   }
 }
 const env = { ...fileEnv, ...Object.fromEntries(Object.entries(process.env).filter(([, v]) => v)) };
 
-let pub = (env.VTGST_LICENSE_PUBLIC_KEY || '').trim();
+let pub = (env.VTGST_LICENSE_PUBLIC_KEY || '').trim().replace(/\\n/g, '\n');
 const pemFile = path.resolve(ROOT, env.VTGST_LICENSE_PUBLIC_KEY_FILE || 'license-public.pem');
 if (!pub && fs.existsSync(pemFile)) pub = fs.readFileSync(pemFile, 'utf8').trim();
-if (pub && !pub.includes('BEGIN')) pub = Buffer.from(pub, 'base64').toString('utf8');
+if (pub && !pub.includes('BEGIN')) {
+  const compact = pub.replace(/\s+/g, '');
+  // Either the bare key line from the PEM ("MCowBQYDK2Vw...", base64 of DER) or base64 of the whole PEM.
+  pub = compact.startsWith('MC')
+    ? `-----BEGIN PUBLIC KEY-----\n${compact}\n-----END PUBLIC KEY-----`
+    : Buffer.from(compact, 'base64').toString('utf8');
+}
+if (pub) {
+  try {
+    const key = (await import('crypto')).createPublicKey(pub);
+    if (key.asymmetricKeyType !== 'ed25519') throw new Error(`expected an Ed25519 key, got ${key.asymmetricKeyType}`);
+  } catch (e) {
+    console.error(`VTGST_LICENSE_PUBLIC_KEY is not a valid public key: ${e.message}`);
+    process.exit(1);
+  }
+}
 
 const manifestHashFile = path.join(ROOT, 'build', 'server-manifest.sha256');
 const serverManifestHash = fs.existsSync(manifestHashFile) ? fs.readFileSync(manifestHashFile, 'utf8').trim() : '';
-const packFile = path.join(ROOT, 'build', 'server.asar');
+const packFile = path.join(ROOT, 'build', 'server.pack');
 let serverPackHash = '';
 if (fs.existsSync(packFile)) {
   const { createHash } = await import('crypto');
@@ -68,7 +85,7 @@ if (release) {
   const missing = [];
   if (!env.VTGST_SERVER_URL || !cfg.serverUrl.startsWith('https://')) missing.push('VTGST_SERVER_URL (https)');
   if (!cfg.licensePublicKey) missing.push('VTGST_LICENSE_PUBLIC_KEY');
-  if (!serverManifestHash || !serverPackHash) missing.push('build/server.asar (run npm run bundle first)');
+  if (!serverManifestHash || !serverPackHash) missing.push('build/server.pack (run npm run bundle first)');
   if (missing.length) {
     console.error(`Release build is missing: ${missing.join(', ')}`);
     console.error('Set them in build.env + license-public.pem in the project root (see build.env.example), or as environment variables.');

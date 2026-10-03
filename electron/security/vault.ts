@@ -8,11 +8,13 @@ import { getFingerprint } from './fingerprint';
  * Encrypted local vault for the app's secrets (database key seed, device key
  * pair, license token, backup key, Google refresh token, clock watermark…).
  *
- * Two layers:
- *  1. AES-256-GCM with a key derived from this machine's fingerprint, so a
- *     copied vault is useless on any other computer.
- *  2. The OS keystore (Windows DPAPI / macOS Keychain / libsecret) via
- *     Electron safeStorage, tying it to the logged-in OS user as well.
+ * Sealed with AES-256-GCM under a key derived from this machine's fingerprint,
+ * so a copied vault is useless on any other computer. The OS keystore
+ * (Electron safeStorage) is deliberately not used for new writes: on Windows
+ * its key lives in Chromium's "Local State" file, which is not saved if the app
+ * is killed during first start and can be reset by Windows. Losing it would make
+ * the database key, and so all business data, unrecoverable. Vaults written by
+ * older versions with it are still read and are re-saved in this format.
  * Writes are atomic (temp file + rename) and a second copy is kept so a
  * crash during write can never lose the database key.
  */
@@ -65,8 +67,7 @@ function seal(json: string): Buffer {
   const iv = crypto.randomBytes(12);
   const c = crypto.createCipheriv('aes-256-gcm', machineKey(), iv);
   const inner = Buffer.concat([iv, c.update(json, 'utf8'), c.final(), c.getAuthTag()]);
-  const outer = safeStorage.isEncryptionAvailable() ? Buffer.concat([Buffer.from([1]), safeStorage.encryptString(inner.toString('base64'))]) : Buffer.concat([Buffer.from([0]), inner]);
-  return Buffer.concat([MAGIC, outer]);
+  return Buffer.concat([MAGIC, Buffer.from([0]), inner]);
 }
 
 function unseal(buf: Buffer): string {
@@ -95,7 +96,9 @@ export function loadVault(): VaultLoadResult {
   const existing = [main, backup].filter((p) => fs.existsSync(p));
   for (const p of existing) {
     try {
-      data = JSON.parse(unseal(fs.readFileSync(p))) as VaultData;
+      const raw = fs.readFileSync(p);
+      data = JSON.parse(unseal(raw)) as VaultData;
+      if (raw[4] !== 0) saveVault(); // migrate an old OS-keystore vault
       return 'loaded';
     } catch {
       /* try next copy */
