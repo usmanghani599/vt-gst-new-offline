@@ -146,6 +146,10 @@ export function Sidebar({
       items: [{ href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard }],
     },
     {
+      title: 'Desktop App',
+      items: [{ href: '/desktop/settings', label: 'Desktop Settings', icon: ShieldCheck }],
+    },
+    {
       title: 'POS Billing Counter',
       items: [
         { href: '/sales/pos', label: 'Create POS Bill', icon: Store, feature: 'POS' },
@@ -182,6 +186,10 @@ export function Sidebar({
       items: [{ href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard }],
     },
     {
+      title: 'Desktop App',
+      items: [{ href: '/desktop/settings', label: 'Desktop Settings', icon: ShieldCheck }],
+    },
+    {
       title: 'Sales & Orders',
       items: [
         { href: '/sales/orders', label: 'Client Orders', icon: ShoppingBag },
@@ -214,6 +222,10 @@ export function Sidebar({
     {
       title: 'Overview',
       items: [{ href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard }],
+    },
+    {
+      title: 'Desktop App',
+      items: [{ href: '/desktop/settings', label: 'Desktop Settings', icon: ShieldCheck }],
     },
     {
       title: 'Sales & POS Engine',
@@ -261,6 +273,10 @@ export function Sidebar({
     {
       title: 'Overview',
       items: [{ href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard }],
+    },
+    {
+      title: 'Desktop App',
+      items: [{ href: '/desktop/settings', label: 'Desktop Settings', icon: ShieldCheck }],
     },
     {
       title: 'Sales & POS Engine',
@@ -327,7 +343,6 @@ export function Sidebar({
         { href: '/company/users', label: 'Team & User Access', icon: Users },
         { href: '/company/financial-years', label: 'Financial Years', icon: History },
         { href: '/company/settings', label: 'Company Settings', icon: Settings },
-        { href: '/desktop/settings', label: 'License, Sync, Backup & Print', icon: CreditCard },
       ],
     },
   ];

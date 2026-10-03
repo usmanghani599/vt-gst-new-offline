@@ -81,9 +81,21 @@ export const PATCHES = [
   {
     name: 'sidebar-billing',
     file: 'components/sidebar.tsx',
-    marker: "href: '/desktop/settings'",
-    find: "{ href: '/subscription', label: 'Plan & Billing', icon: CreditCard },",
-    replace: "{ href: '/desktop/settings', label: 'License, Sync, Backup & Print', icon: CreditCard },",
+    marker: "title: 'Desktop App'",
+    find: "        { href: '/subscription', label: 'Plan & Billing', icon: CreditCard },\n",
+    replace: '',
+  },
+  {
+    // Own "Desktop App" section right below Dashboard, for every role
+    // (non-owners only see the Printing tab on that page).
+    name: 'sidebar-desktop-settings',
+    file: 'components/sidebar.tsx',
+    marker: "title: 'Desktop App'",
+    all: true,
+    find: "      items: [{ href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard }],\n    },\n",
+    replace:
+      "      items: [{ href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard }],\n    },\n" +
+      "    {\n      title: 'Desktop App',\n      items: [{ href: '/desktop/settings', label: 'Desktop Settings', icon: ShieldCheck }],\n    },\n",
   },
   {
     name: 'sidebar-media-label',

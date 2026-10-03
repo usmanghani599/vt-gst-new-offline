@@ -95,15 +95,18 @@ for (const patch of PATCHES) {
     failed++;
     continue;
   }
-  let text = fs.readFileSync(file, 'utf8');
+  // Patches are written with LF; Windows checkouts may use CRLF.
+  const raw = fs.readFileSync(file, 'utf8');
+  const crlf = raw.includes('\r\n');
+  let text = crlf ? raw.replace(/\r\n/g, '\n') : raw;
   if (patch.marker && text.includes(patch.marker)) continue; // already applied
   if (!text.includes(patch.find)) {
     console.warn(`! patch "${patch.name}" no longer matches ${patch.file} — update scripts/desktop-patches.mjs`);
     failed++;
     continue;
   }
-  text = text.replace(patch.find, patch.replace);
-  fs.writeFileSync(file, text);
+  text = patch.all ? text.split(patch.find).join(patch.replace) : text.replace(patch.find, patch.replace);
+  fs.writeFileSync(file, crlf ? text.replace(/\n/g, '\r\n') : text);
 }
 
 console.log(`Copied ${copied} files, kept ${skipped} desktop-owned files, ${PATCHES.length - failed}/${PATCHES.length} patches ok.`);
