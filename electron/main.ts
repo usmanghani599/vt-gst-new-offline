@@ -22,6 +22,7 @@ import {
   localApi,
   refreshLicenseInServer,
   serverDir,
+  setPackagedServerDir,
   startServer,
   stopServer,
   tokens,
@@ -29,6 +30,7 @@ import {
 import * as backup from './backup/backup-manager';
 import { getPrintSettings, listPrinters, printContents, savePrintSettings, testPrint, type PrintKind } from './print/print-manager';
 import { BUILD_CONFIG } from './build-config';
+import { invalidateUnpacked, needsUnpack, unpackServer } from './server/unpack';
 
 const STATIC_DIR = path.join(__dirname, '..', 'electron-static');
 const PRELOAD = path.join(__dirname, 'preload.js');
@@ -278,7 +280,34 @@ async function boot() {
     return fatal('VTGST Desktop', 'This build has no license public key. Build with VTGST_LICENSE_PUBLIC_KEY set.');
   }
   if (app.isPackaged) {
-    const integrity = verifyServerIntegrity(serverDir());
+    try {
+      let splash: BrowserWindow | null = null;
+      if (needsUnpack()) {
+        splash = new BrowserWindow({ width: 420, height: 260, frame: false, resizable: false, backgroundColor: '#f8fafc', show: true });
+        await splash.loadURL(`${APP_ORIGIN}splash.html`).catch(() => {});
+        await new Promise((r) => setTimeout(r, 50));
+      }
+      try {
+        setPackagedServerDir(unpackServer());
+      } finally {
+        splash?.destroy();
+      }
+    } catch (e: any) {
+      recordEvent('UNPACK_FAILED', { reason: e.message });
+      return fatal('VTGST Desktop', `VTGST Desktop could not be prepared (${e.message}). Please reinstall VTGST Desktop.\n\nBuild ${BUILD_CONFIG.buildId}`);
+    }
+    let integrity = verifyServerIntegrity(serverDir());
+    if (!integrity.ok) {
+      // Self-heal: re-unpack once from the (hash-verified) archive, then check again.
+      recordEvent('INTEGRITY_REPAIR', { reason: integrity.reason });
+      try {
+        invalidateUnpacked();
+        setPackagedServerDir(unpackServer());
+        integrity = verifyServerIntegrity(serverDir());
+      } catch (e: any) {
+        integrity = { ok: false, reason: e.message };
+      }
+    }
     if (!integrity.ok) {
       recordEvent('INTEGRITY_FAILED', { reason: integrity.reason });
       return fatal(

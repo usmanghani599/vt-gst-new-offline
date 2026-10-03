@@ -68,7 +68,7 @@ npm run dist:win     # Windows NSIS installer -> release/
 npm run dist:mac     # macOS dmg
 ```
 
-`npm run build` = `next build` → `bundle` (assembles `build/server`, writes the integrity manifest) → build config with the manifest hash → compile Electron. electron-builder then applies Electron fuses (no `ELECTRON_RUN_AS_NODE`, no `--inspect`, asar integrity, only load from asar).
+`npm run build` = `next build` → `bundle` (assembles `build/server`, writes the integrity manifest and packs everything into the single file `build/server.asar`) → build config with the manifest + archive hashes → compile Electron. The installer ships only that one server file; on first start after install/update the app unpacks it to `%APPDATA%\VTGST Desktop\rt\<build>` (a short "Preparing…" window), verifies every file on each start, and re-unpacks automatically if anything there was damaged. The build output must show `afterPack: build …: server.asar present and verified`. electron-builder then applies Electron fuses (no `ELECTRON_RUN_AS_NODE`, no `--inspect`, asar integrity, only load from asar).
 
 ### Google Drive setup (once)
 

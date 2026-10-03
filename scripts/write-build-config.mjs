@@ -38,6 +38,13 @@ if (pub && !pub.includes('BEGIN')) pub = Buffer.from(pub, 'base64').toString('ut
 
 const manifestHashFile = path.join(ROOT, 'build', 'server-manifest.sha256');
 const serverManifestHash = fs.existsSync(manifestHashFile) ? fs.readFileSync(manifestHashFile, 'utf8').trim() : '';
+const packFile = path.join(ROOT, 'build', 'server.asar');
+let serverPackHash = '';
+if (fs.existsSync(packFile)) {
+  const { createHash } = await import('crypto');
+  serverPackHash = createHash('sha256').update(fs.readFileSync(packFile)).digest('hex');
+  fs.writeFileSync(path.join(ROOT, 'build', 'server-pack.sha256'), serverPackHash);
+}
 
 let commit = 'unknown';
 try {
@@ -50,6 +57,7 @@ const buildId = `${commit}-${new Date().toISOString().slice(0, 16).replace(/[-:T
 const cfg = {
   buildId,
   serverManifestHash,
+  serverPackHash,
   serverUrl: (env.VTGST_SERVER_URL || 'http://localhost:3000').replace(/\/+$/, ''),
   googleClientId: env.VTGST_GOOGLE_CLIENT_ID || '',
   googleClientSecret: env.VTGST_GOOGLE_CLIENT_SECRET || '',
@@ -60,7 +68,7 @@ if (release) {
   const missing = [];
   if (!env.VTGST_SERVER_URL || !cfg.serverUrl.startsWith('https://')) missing.push('VTGST_SERVER_URL (https)');
   if (!cfg.licensePublicKey) missing.push('VTGST_LICENSE_PUBLIC_KEY');
-  if (!serverManifestHash) missing.push('build/server-manifest.sha256 (run npm run bundle first)');
+  if (!serverManifestHash || !serverPackHash) missing.push('build/server.asar (run npm run bundle first)');
   if (missing.length) {
     console.error(`Release build is missing: ${missing.join(', ')}`);
     console.error('Set them in build.env + license-public.pem in the project root (see build.env.example), or as environment variables.');
