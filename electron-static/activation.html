@@ -66,6 +66,8 @@
     $('quit').addEventListener('click', () => api && api.quit());
     $('key').addEventListener('input', (e) => {
       const raw = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      // While the user is still typing the "VTG" prefix itself, leave it alone.
+      if ('VTG'.startsWith(raw)) { e.target.value = raw; return; }
       const body = raw.startsWith('VTG') ? raw.slice(3) : raw;
       const groups = body.slice(0, 20).match(/.{1,5}/g) || [];
       e.target.value = raw.length ? ['VTG', ...groups].join('-') : '';

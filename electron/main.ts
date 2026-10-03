@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs';
-import { app, BrowserWindow, dialog, ipcMain, Menu, net, session, shell, type IpcMainInvokeEvent } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, Menu, net, protocol, session, shell, type IpcMainInvokeEvent } from 'electron';
 import { loadVault, recordEvent } from './security/vault';
 import { verifyServerIntegrity } from './security/integrity';
 import {
@@ -32,6 +32,29 @@ import { BUILD_CONFIG } from './build-config';
 
 const STATIC_DIR = path.join(__dirname, '..', 'electron-static');
 const PRELOAD = path.join(__dirname, 'preload.js');
+
+/**
+ * Static screens (activation) are served from app.asar through a private
+ * protocol: the GrantFileProtocolExtraPrivileges fuse is off, so file:// pages
+ * cannot read from the asar archive.
+ */
+const APP_SCHEME = 'vtgst';
+const APP_ORIGIN = `${APP_SCHEME}://app/`;
+protocol.registerSchemesAsPrivileged([{ scheme: APP_SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: false } }]);
+
+const STATIC_TYPES: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.png': 'image/png', '.css': 'text/css' };
+
+function registerAppProtocol() {
+  protocol.handle(APP_SCHEME, async (request) => {
+    const url = new URL(request.url);
+    const name = path.basename(decodeURIComponent(url.pathname));
+    const file = path.join(STATIC_DIR, name);
+    if (url.host !== 'app' || !STATIC_TYPES[path.extname(name)] || !fs.existsSync(file)) {
+      return new Response('Not found', { status: 404 });
+    }
+    return new Response(fs.readFileSync(file), { headers: { 'Content-Type': STATIC_TYPES[path.extname(name)] } });
+  });
+}
 
 let mainWindow: BrowserWindow | null = null;
 let activationWindow: BrowserWindow | null = null;
@@ -68,7 +91,7 @@ app.on('web-contents-created', (_e, contents) => {
     return { action: 'deny' };
   });
   contents.on('will-navigate', (event, url) => {
-    const allowed = (serverRunning && url.startsWith(baseUrl())) || url.startsWith('file://');
+    const allowed = (serverRunning && url.startsWith(baseUrl())) || url.startsWith(APP_ORIGIN);
     if (!allowed) {
       event.preventDefault();
       if (/^https:\/\//.test(url)) shell.openExternal(url);
@@ -82,7 +105,7 @@ app.on('web-contents-created', (_e, contents) => {
 
 function trustedSender(e: IpcMainInvokeEvent): boolean {
   const url = e.senderFrame?.url || '';
-  return (serverRunning && url.startsWith(baseUrl() + '/')) || url.startsWith('file://');
+  return (serverRunning && url.startsWith(baseUrl() + '/')) || url.startsWith(APP_ORIGIN);
 }
 
 function handle(channel: string, fn: (e: IpcMainInvokeEvent, ...args: any[]) => unknown) {
@@ -129,7 +152,7 @@ function openActivationWindow(): Promise<void> {
       webPreferences: webPrefs(),
     });
     activationWindow.setMenuBarVisibility(false);
-    activationWindow.loadFile(path.join(STATIC_DIR, 'activation.html'));
+    activationWindow.loadURL(`${APP_ORIGIN}activation.html`);
     activationWindow.on('closed', () => {
       activationWindow = null;
       resolve();
@@ -411,6 +434,7 @@ function registerIpc() {
 }
 
 app.whenReady().then(async () => {
+  registerAppProtocol();
   registerIpc();
   try {
     await boot();

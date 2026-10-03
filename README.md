@@ -25,7 +25,8 @@ app/, components/, lib/, public/   Same Next.js UI as the online app (synced fro
   lib/db.ts, lib/auth.ts, lib/s3.ts  Desktop replacements (encrypted SQLite, license-based features, encrypted local files)
   middleware.ts                    Per-launch secret, license lock, online-only route redirects
 electron/                          Main process: vault, fingerprint, license, server host, backup, print, IPC
-electron-static/                   Activation screen + icon
+electron-static/                   Activation screen + icon (packed into app.asar)
+installer/                         Installer/app icon used by electron-builder
 desktop-server/server-entry.js     Embedded server entry: migrations, Next.js start, backup export/restore
 packages/better-sqlite3-cipher-shim  Makes Prisma open the DB encrypted
 prisma/upstream.schema.prisma      Copied from online (MySQL)
