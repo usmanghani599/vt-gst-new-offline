@@ -52,7 +52,7 @@ VTGST_SERVER_URL=https://your-online-domain VTGST_LICENSE_PUBLIC_KEY="$(cat publ
 
 ## Build installers
 
-Set these in the build environment (CI secrets), then build **on the target OS**:
+Easiest: copy `build.env.example` to `build.env` and fill it in, and save the license public key as `license-public.pem` (both in the project root; both are git-ignored). Or set the same names as environment variables (CI secrets). Then build **on the target OS**:
 
 | Variable | Purpose |
 |---|---|
