@@ -6,16 +6,18 @@ directories:
   output: release
   buildResources: installer
 
-# Only the compiled main/preload code goes into app.asar. The Next.js server
-# (with its own node_modules) is copied to resources/server by
-# scripts/after-pack.cjs (extraResources would drop node_modules and
-# dot-folders like .prisma) and verified against the integrity manifest whose
-# hash is compiled into the main process.
+# Only the compiled main/preload code goes into app.asar. The whole local
+# Next.js server ships as ONE file, resources/server.asar (built by
+# scripts/prepare-bundle.mjs). The app unpacks it on first start and verifies
+# every file against the manifest hash compiled into the main process.
 files:
   - dist-electron/**/*
   - electron-static/**/*
   - package.json
   - "!**/node_modules/**/*"
+extraResources:
+  - from: build/server.asar
+    to: server.asar
 afterPack: scripts/after-pack.cjs
 
 asar: true

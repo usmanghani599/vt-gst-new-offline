@@ -1,7 +1,7 @@
 {
   "name": "vtgst-desktop",
   "productName": "VTGST Desktop",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "VTGST offline desktop app (Electron) with encrypted local database, license protection, online sync and encrypted Google Drive backup.",
   "author": "Viver Technologies",
   "license": "UNLICENSED",

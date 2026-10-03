@@ -28,9 +28,17 @@ const pendingExports = new Map<number, { resolve: (b: Buffer) => void; reject: (
 /** Unpackaged test runs may point at a prepared bundle (npm run bundle) instead of `next dev`. */
 const bundleOverride = !app.isPackaged ? process.env.VTGST_SERVER_DIR : undefined;
 
+let packagedServerDir: string | null = null;
+/** Set by main after the server archive has been unpacked (packaged builds). */
+export function setPackagedServerDir(dir: string) {
+  packagedServerDir = dir;
+}
+
 export function serverDir(): string {
   if (bundleOverride) return path.resolve(bundleOverride);
-  return isDev ? app.getAppPath() : path.join(process.resourcesPath, 'server');
+  if (isDev) return app.getAppPath();
+  if (!packagedServerDir) throw new Error('Server not unpacked yet');
+  return packagedServerDir;
 }
 
 function entryPath(): string {

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'" />
+  <title>VTGST Desktop</title>
+  <style>
+    body { margin: 0; height: 100vh; display: flex; align-items: center; justify-content: center; background: #f8fafc; color: #0f172a;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+    .card { text-align: center; }
+    .logo { width: 52px; height: 52px; margin: 0 auto 14px; border-radius: 14px; background: linear-gradient(135deg, #0284c7, #06b6d4);
+      color: #fff; font-weight: 900; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .title { font-weight: 900; font-size: 18px; color: #0284c7; }
+    .sub { font-size: 12px; color: #64748b; margin-top: 6px; }
+    .bar { width: 220px; height: 4px; background: #e2e8f0; border-radius: 4px; margin: 18px auto 0; overflow: hidden; }
+    .bar i { display: block; width: 40%; height: 100%; background: #0284c7; border-radius: 4px; animation: m 1.2s ease-in-out infinite; }
+    @keyframes m { 0% { margin-left: -40%; } 100% { margin-left: 100%; } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">VT</div>
+    <div class="title">VTGST Desktop</div>
+    <div class="sub">Preparing the app for first use… this happens once after install or update.</div>
+    <div class="bar"><i></i></div>
+  </div>
+</body>
+</html>
