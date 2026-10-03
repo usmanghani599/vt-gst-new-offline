@@ -194,7 +194,7 @@ function buildMenu() {
       label: 'VTGST',
       submenu: [
         { label: 'Dashboard', click: () => mainWindow?.loadURL(baseUrl() + '/dashboard') },
-        { label: 'License, Sync, Backup & Print…', click: () => mainWindow?.loadURL(baseUrl() + '/desktop/settings') },
+        { label: 'Desktop Settings (License, Sync, Backup && Print)…', click: () => mainWindow?.loadURL(baseUrl() + '/desktop/settings') },
         { type: 'separator' },
         { label: 'Back up to file now…', click: () => backup.backupNow('file', mainWindow) },
         { type: 'separator' },
